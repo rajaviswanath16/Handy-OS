@@ -1,0 +1,354 @@
+MAIN_ACTIVITY 1
+package com.example.student.all_in_one_pagefault;
+
+import android.content.Intent;
+import android.support.v7.app.AppCompatActivity;
+import android.os.Bundle;
+import android.view.View;
+import android.widget.TextView;
+
+public class MainPage extends AppCompatActivity {
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main_page);
+        Intent i2=this.getIntent();
+    }
+    public void Start(View view)
+    {
+        TextView tv=(TextView)findViewById(R.id.textView2);
+        Intent i1=new Intent(MainPage.this,algo.class);
+        startActivity(i1);
+    }
+}
+
+MAIN_ACTIVITY 2
+package com.example.student.all_in_one_pagefault;
+import android.content.ContentValues;
+import android.content.Intent;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
+import android.support.v7.app.AppCompatActivity;
+import android.os.Bundle;
+import android.support.v7.widget.VectorEnabledTintResources;
+import android.view.View;
+import android.widget.EditText;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import static android.provider.AlarmClock.EXTRA_MESSAGE;
+
+public class algo extends AppCompatActivity {
+    private EditText et1;
+
+    private EditText et2;
+    DbHelper dbhelper = new DbHelper(this);
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_algo);
+        et1 = (EditText) findViewById(R.id.et1);
+        et2 = (EditText) findViewById(R.id.et2);
+
+        Intent i1=getIntent();
+    }
+
+
+    public void ADD(View view) {
+        String set1 = et1.getText().toString();
+
+        if (set1.equals("")) {
+            Toast.makeText(getApplicationContext(), "Please fill all fields", Toast.LENGTH_LONG).show();
+        } else {
+            SQLiteDatabase sqLiteDatabase = dbhelper.getWritableDatabase();
+            ContentValues Names = new ContentValues();
+            Names.put("Page_Numbers", set1);
+            sqLiteDatabase.insert("Trail", null, Names);
+            sqLiteDatabase.close();
+            dbhelper.close();
+            Toast.makeText(getApplicationContext(), "Added", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    public void CLEAR(View view) {
+        SQLiteDatabase sqLiteDatabase = dbhelper.getWritableDatabase();
+        sqLiteDatabase.delete("Trail", null, null);
+        sqLiteDatabase.close();
+        dbhelper.close();
+        Toast.makeText(getApplicationContext(), "Deleted", Toast.LENGTH_SHORT).show();
+        EditText et2=(EditText)findViewById(R.id.et2);
+        et2.setText("");
+
+    }
+
+    public void FIFO(View view) {
+
+        SQLiteDatabase sqLiteDatabase = dbhelper.getReadableDatabase();
+        Cursor cursor = sqLiteDatabase.query("Trail", new String[]{"Page_Numbers"}, null, null, null, null, null);
+
+
+        int f, page = 0, ch, hit=0,pgf = 0, n, chn = 0;
+        boolean flag;
+        int pages[];
+
+
+        int pt = 0;
+        String set2 = et2.getText().toString();
+        f = Integer.parseInt(set2);
+        int frame[] = new int[f];
+        for (int i = 0; i < f; i++) {
+            frame[i] = -1;
+        }
+        n = cursor.getCount();
+        pages = new int[n];
+        cursor.moveToFirst();
+
+        for (int j = 0; j < n; j++) {
+            if(cursor != null && !cursor.isAfterLast())
+            {  pages[j] = cursor.getInt(0);
+                cursor.moveToNext();}
+        }
+        do {
+            int pg = 0;
+            for (pg = 0; pg < n; pg++) {
+
+                page = pages[pg];
+                flag = true;
+                for (int j = 0; j < f; j++) {
+                    if (page == frame[j]) {
+                        flag = false;
+                        hit++;
+                        break;
+                    }
+                }
+                if (flag) {
+                    frame[pt] = page;
+                    pt++;
+                    if (pt == f)
+                        pt = 0;
+                    pgf++;
+                }
+
+
+                chn++;
+            }
+        } while (chn != n);
+        System.out.println("The number of Faults: " + pgf);
+        System.out.println("The number of pages are"+n);
+        System.out.println("The number of hits: " + hit);
+        Intent intent = new Intent (this, Result.class);
+
+        String message = String.valueOf(pgf);
+        intent.putExtra("PageFaults", message);
+        String message1=String.valueOf(hit);
+        intent.putExtra("HIts",message1);
+        startActivity(intent);
+        }
+
+    public void LRU(View view)
+    {        SQLiteDatabase sqLiteDatabase = dbhelper.getReadableDatabase();
+        Cursor cursor = sqLiteDatabase.query("Trail", new String[]{"Page_Numbers"}, null, null, null, null, null);
+
+        int f,page=0,ch,hit=0,pgf=0,n,chn=0;
+        boolean flag;
+        int pages[];
+        int k=0;
+        String set2 = et2.getText().toString();
+        f=Integer.parseInt(set2);
+        int frame1[]=new int[f];
+        int a[]=new int[f];
+        int b[]=new int[f];
+        for(int i=0;i<f;i++)
+        {
+            frame1[i]=-1;
+            a[i]=-1;
+            b[i]=-1;
+        }
+
+        n= cursor.getCount(); cursor.moveToFirst();
+        pages=new int[n];
+
+        for(int j=0;j<n;j++) {
+            if(cursor != null && !cursor.isAfterLast())
+            {  pages[j] = cursor.getInt(0);
+                cursor.moveToNext();}
+        }
+
+        do{
+            int pg=0;
+            for(pg=0;pg<n;pg++)
+            {
+                page=pages[pg];
+                flag=true;
+                for(int j=0;j<f;j++)
+                {
+                    if(page==frame1[j])
+                    {flag=false;
+                        hit++;
+                        break;}
+                }
+
+                for(int j=0;j<f && flag;j++)
+                {
+                    if(frame1[j]==a[f-1])
+                    {k=j;
+                        break;}
+                }
+
+                if(flag)
+                {
+                    frame1[k]=page;
+                    pgf++;
+
+                }
+                else
+                {
+
+                }
+                int p=1;
+                b[0]=page;
+                for(int j=0;j<a.length;j++)
+                {
+                    if(page!=a[j] && p<f)
+                    {
+                        b[p]=a[j];
+                        p++;
+                    }
+                }
+                for(int j=0;j<f;j++)
+                {
+                    a[j]=b[j];
+                }
+                chn++;
+
+            }
+        }while(chn!=n);
+        System.out.println("The number of Faults: " + pgf);
+        System.out.println("The number of hits: " + hit);
+        System.out.println("The number of pages are"+n);
+
+        Intent intent = new Intent (this, Result.class);
+
+        String message = String.valueOf(pgf);
+        intent.putExtra("PageFaults", message);
+        String message1=String.valueOf(hit);
+        intent.putExtra("HIts",message1);
+        startActivity(intent);
+        }
+
+
+
+    public void OPTIMAL(View view)
+    {  SQLiteDatabase sqLiteDatabase = dbhelper.getReadableDatabase();
+        Cursor cursor = sqLiteDatabase.query("Trail", new String[]{"Page_Numbers"}, null, null, null, null, null);
+
+        int frames, pointer = 0, hit = 0, fault = 0,ref_len;
+        boolean isFull = false;
+        int buffer[];
+        int reference[];
+        int mem_layout[][];
+
+        String set2 = et2.getText().toString();
+        frames=Integer.parseInt(set2);
+
+        System.out.println("Please enter the length of the Reference string: ");
+        System.out.println("enter the no of pages ");
+        ref_len =  cursor.getCount(); cursor.moveToFirst();
+
+
+        reference = new int[ref_len];
+        mem_layout = new int[ref_len][frames];
+        buffer = new int[frames];
+        for(int j = 0; j < frames; j++)
+            buffer[j] = -1;
+
+        System.out.println("Please enter the reference string: ");
+        for(int i = 0; i < ref_len; i++)
+        {
+            if(cursor != null && !cursor.isAfterLast())
+            {  reference[i] = cursor.getInt(0);
+                cursor.moveToNext();}
+        }
+        System.out.println();
+        for(int i = 0; i < ref_len; i++)
+        {
+            int search = -1;
+            for(int j = 0; j < frames; j++)
+            {
+                if(buffer[j] == reference[i])
+                {
+                    search = j;
+
+                    break;
+                }
+            }
+            if(search == -1)
+            {
+                if(isFull)
+                {
+                    int index[] = new int[frames];
+                    boolean index_flag[] = new boolean[frames];
+                    for(int j = i + 1; j < ref_len; j++)
+                    {
+                        for(int k = 0; k < frames; k++)
+                        {
+                            if((reference[j] == buffer[k]) && (index_flag[k] == false))
+                            {
+                                index[k] = j;
+                                index_flag[k] = true;hit++;
+                                break;
+                            }
+                        }
+                    }
+                    int max = index[0];
+                    pointer = 0;
+                    if(max == 0)
+                        max = 200;
+                    for(int j = 0; j < frames; j++)
+                    {
+                        if(index[j] == 0)
+                            index[j] = 200;
+                        if(index[j] > max)
+                        {
+                            max = index[j];
+                            pointer = j;
+                        }
+                    }
+                }
+                buffer[pointer] = reference[i];
+                fault++;
+                if(!isFull)
+                {
+                    pointer++;
+                    if(pointer == frames)
+                    {
+                        pointer = 0;
+                        isFull = true;
+                    }
+                }
+            }
+            for(int j = 0; j < frames; j++)
+                mem_layout[i][j] = buffer[j];
+        }
+
+        for(int i = 0; i < frames; i++)
+        {
+            for(int j = 0; j < ref_len; j++)
+                System.out.printf("%3d ",mem_layout[j][i]);
+            System.out.println();
+        }
+
+        System.out.println("The number of Hits: " + hit);
+        System.out.println("The number of Faults: " + fault);
+        System.out.println("The length is" +ref_len);
+        String result=String.valueOf(fault);
+        Intent intent2 = new Intent(this,Result.class);
+        intent2.putExtra("PageFaults",result);
+        String message1=String.valueOf(hit);
+        intent2.putExtra("HIts",message1);
+        startActivity(intent2);
+        }
+       }
+
